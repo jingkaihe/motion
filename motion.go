@@ -58,6 +58,10 @@ type Hand struct {
 	Wrist                  []float32   `json:"wrist"`
 }
 
+func (td *TrackingDate) isNoise() bool {
+	return len(td.Hands) == 0 // If hands are not spotted by LeapMotion, then the frame will be regarded as noise.
+}
+
 type InteractionBox struct {
 	Center []float32 `json:"center"`
 	Size   []float32 `json:"size"`
@@ -103,7 +107,7 @@ func NewDevice() (*Device, error) {
 	return &d, nil
 }
 
-func (d *Device) ListenAndReceive() error {
+func (d *Device) ListenAndReceive(muteNoise bool) error {
 
 	enableGestures := struct {
 		enableGestures bool `json:"enableGestures"`
@@ -121,19 +125,25 @@ func (d *Device) ListenAndReceive() error {
 		return err
 	}
 
-	go d.Receive()
+	go d.Receive(muteNoise)
 
 	return nil
 }
 
-func (d *Device) Receive() {
+func (d *Device) Receive(muteNoise bool) {
 	var data TrackingDate
 	for {
 		if err := websocket.JSON.Receive(d.Ws, &data); err != nil {
 			log.Println(err)
 			continue
 		} else {
-			d.FrameQueue <- data
+			if muteNoise {
+				if !data.isNoise() {
+					d.FrameQueue <- data
+				}
+			} else {
+				d.FrameQueue <- data
+			}
 		}
 	}
 	close(d.FrameQueue)

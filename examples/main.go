@@ -14,12 +14,12 @@ func main() {
 
 	fmt.Println("Connected to leapmotion")
 
-	d.ListenAndReceive()
+	d.ListenAndReceive(true)
 	defer d.Close()
 
-	for msg := range d.FrameQueue {
-		if len(msg.Gestures) > 0 {
-			for _, g := range msg.Gestures {
+	for frame := range d.FrameQueue {
+		if len(frame.Gestures) > 0 {
+			for _, g := range frame.Gestures {
 				fmt.Println(g.Type)
 			}
 		}
