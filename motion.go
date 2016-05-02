@@ -147,7 +147,6 @@ func (d *Device) Receive(muteNoise bool) {
 			}
 		}
 	}
-	close(d.FrameQueue)
 }
 
 func (d *Device) Close() {
