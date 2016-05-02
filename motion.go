@@ -1,11 +1,12 @@
 package motion
 
 import (
-	"golang.org/x/net/websocket"
 	"log"
+
+	"golang.org/x/net/websocket"
 )
 
-type TrackingDate struct {
+type TrackingData struct {
 	CurrentFrameRate float32        `json:"currentFrameRate"`
 	Id               float32        `json:"id"`
 	R                [][]float32    `json:"r"`
@@ -58,7 +59,7 @@ type Hand struct {
 	Wrist                  []float32   `json:"wrist"`
 }
 
-func (td *TrackingDate) isNoise() bool {
+func (td *TrackingData) isNoise() bool {
 	return len(td.Hands) == 0 // If hands are not spotted by LeapMotion, then the frame will be regarded as noise.
 }
 
@@ -92,12 +93,12 @@ type Pointable struct {
 
 type Device struct {
 	Ws         *websocket.Conn
-	FrameQueue chan TrackingDate
+	FrameQueue chan TrackingData
 }
 
 func NewDevice() (*Device, error) {
 	d := Device{}
-	d.FrameQueue = make(chan TrackingDate)
+	d.FrameQueue = make(chan TrackingData)
 	conn, err := websocket.Dial("ws://127.0.0.1:6437/v3.json", "", "http://localhost/")
 	if err != nil {
 		return &d, err
@@ -131,7 +132,7 @@ func (d *Device) ListenAndReceive(muteNoise bool) error {
 }
 
 func (d *Device) Receive(muteNoise bool) {
-	var data TrackingDate
+	var data TrackingData
 	for {
 		if err := websocket.JSON.Receive(d.Ws, &data); err != nil {
 			log.Println(err)
